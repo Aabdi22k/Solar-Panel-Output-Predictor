@@ -17,8 +17,8 @@ Clone the repository:
 
 .. code-block:: bash
 
-    git clone https://github.com/yourusername/spop.git
-    cd spop
+    git clone https://github.com/Aabdi22k/Solar-Panel-Output-Predictor-Remake.git
+    cd Solar-Panel-Output-Predictor-Remake
 
 Create and activate a virtual environment:
 
