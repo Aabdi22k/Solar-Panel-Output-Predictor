@@ -32,3 +32,6 @@ docs/build/
 docs/_build/
 docs/build/html/
 docs/build/doctrees/
+
+# Tree
+tree.txt
