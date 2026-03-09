@@ -8,9 +8,9 @@ converts hourly weather fields into daily aggregates used by the pipeline.
 from __future__ import annotations
 
 from datetime import date
+
 import pandas as pd
 import requests
-
 
 ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 FORECAST_URL = "https://api.open-meteo.com/v1/forecast"
@@ -26,8 +26,8 @@ def _aggregate_hourly_to_daily(hourly: dict) -> pd.DataFrame:
     """Aggregate Open-Meteo hourly payload into daily features.
 
     Args:
-        hourly: Open-Meteo "hourly" payload (dict of lists) containing the fields
-            listed in HOURLY_FIELDS and the "time" list.
+        hourly: Open-Meteo "hourly" payload (dict of lists) containing the
+            fields listed in HOURLY_FIELDS and the "time" list.
 
     Returns:
         A daily DataFrame with one row per date and aggregated columns such as
@@ -128,7 +128,8 @@ def fetch_historical_weather_daily(
 
     resp = requests.get(ARCHIVE_URL, params=params, timeout=60)
     if resp.status_code != 200:
-        raise RuntimeError(f"Open-Meteo archive failed: {resp.status_code} {resp.text[:200]}")
+        raise RuntimeError(f"""Open-Meteo archive failed:
+                           {resp.status_code} {resp.text[:200]}""")
 
     payload = resp.json()
     hourly = payload.get("hourly", {})
@@ -173,7 +174,6 @@ def fetch_forecast_weather_daily(
         RuntimeError: If the Open-Meteo request fails or returns no hourly data.
         requests.RequestException: If a network-level error occurs.
     """
-    
     params = {
         "latitude": latitude,
         "longitude": longitude,
@@ -186,7 +186,8 @@ def fetch_forecast_weather_daily(
 
     resp = requests.get(FORECAST_URL, params=params, timeout=60)
     if resp.status_code != 200:
-        raise RuntimeError(f"Open-Meteo forecast failed: {resp.status_code} {resp.text[:200]}")
+        raise RuntimeError(f"""Open-Meteo forecast failed:
+                           {resp.status_code} {resp.text[:200]}""")
 
     payload = resp.json()
     hourly = payload.get("hourly", {})

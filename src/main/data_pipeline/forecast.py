@@ -14,8 +14,8 @@ from pathlib import Path
 import pandas as pd
 
 from main.data_sources.open_meteo import fetch_forecast_weather_daily
-from main.features.engineering import engineer_features
 from main.features.cleaning import drop_na_rows
+from main.features.engineering import engineer_features
 
 
 def build_forecast_features(
@@ -43,7 +43,6 @@ def build_forecast_features(
     Raises:
         RuntimeError: If Open-Meteo forecast retrieval fails.
     """
-    
     start = date.today() + timedelta(days=1)
     end = start + timedelta(days=days - 1)
 

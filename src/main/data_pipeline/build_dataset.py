@@ -8,7 +8,6 @@ and cleaning to produce the final training dataset.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
 
@@ -16,8 +15,8 @@ import pandas as pd
 
 from main.data_sources.nrel_nsrdb import fetch_nsrdb_half_hourly
 from main.data_sources.open_meteo import fetch_historical_weather_daily
-from main.features.engineering import engineer_features
 from main.features.cleaning import drop_na_rows
+from main.features.engineering import engineer_features
 
 
 def _aggregate_nsrdb_to_daily(nsrdb_half_hourly: pd.DataFrame) -> pd.DataFrame:
@@ -64,7 +63,8 @@ def build_training_dataset(
         years: List of NSRDB years to fetch.
         nrel_api_key: NREL developer API key.
         nrel_email: Email address required by the NSRDB API.
-        open_meteo_start: Start date (inclusive) for historical weather features.
+        open_meteo_start: Start date (inclusive) for historical weather
+            features.
         open_meteo_end: End date (inclusive) for historical weather features.
         cache_csv_path: Optional path to cache the NSRDB half-hourly CSV data.
 

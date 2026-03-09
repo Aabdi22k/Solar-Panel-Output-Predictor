@@ -6,19 +6,17 @@ to save/load trained artifacts (model, scaler, and evaluation metadata).
 
 from __future__ import annotations
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 import joblib
-import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-from main.models.metrics import compute_error_stats, compute_accuracy_bands
+from main.models.metrics import compute_accuracy_bands, compute_error_stats
 from main.schemas import ModelArtifacts
-
 
 def train_random_forest(
     df: pd.DataFrame,
@@ -46,21 +44,21 @@ def train_random_forest(
         error standard deviation, and accuracy-band percentages.
     """
 
-    X = df.drop(columns=[date_col, target_col])
+    features = df.drop(columns=[date_col, target_col])
     y = df[target_col].to_numpy()
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state
+    features_train, features_test, y_train, y_test = train_test_split(
+        features, y, test_size=test_size, random_state=random_state
     )
 
     scaler = StandardScaler()
-    X_train_scaled = scaler.fit_transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+    features_train_scaled = scaler.fit_transform(features_train)
+    features_test_scaled = scaler.transform(features_test)
 
     model = RandomForestRegressor(random_state=random_state)
-    model.fit(X_train_scaled, y_train)
+    model.fit(features_train_scaled, y_train)
 
-    y_pred = model.predict(X_test_scaled)
+    y_pred = model.predict(features_test_scaled)
 
     mae, err_std = compute_error_stats(y_test, y_pred)
     acc = compute_accuracy_bands(y_test, y_pred, mae, err_std)
@@ -74,7 +72,9 @@ def train_random_forest(
     )
 
 
-def save_artifacts(artifacts: ModelArtifacts, *, models_dir: Path, tag: str) -> None:
+def save_artifacts(
+    artifacts: ModelArtifacts, *, models_dir: Path, tag: str
+) -> None:
     """Save trained model artifacts to disk.
 
     Writes three files:

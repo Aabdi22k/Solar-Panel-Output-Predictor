@@ -6,13 +6,14 @@ measure the percentage of ground-truth points falling within prediction bands.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Dict, Tuple
 
 import numpy as np
 
 
-def mae_band_accuracy(y_true: np.ndarray, y_pred: np.ndarray, band: float) -> float:
+def mae_band_accuracy(
+    y_true: np.ndarray, y_pred: np.ndarray, band: float
+) -> float:
     """Compute the percentage of points within a ± band of the prediction.
 
     Args:
@@ -21,7 +22,8 @@ def mae_band_accuracy(y_true: np.ndarray, y_pred: np.ndarray, band: float) -> fl
         band: Non-negative tolerance band around predictions.
 
     Returns:
-        Percentage (0-100) of points where y_true lies within [y_pred - band, y_pred + band].
+        Percentage (0-100) of points where
+            y_true lies within [y_pred - band, y_pred + band].
     """
     y_true = np.asarray(y_true)
     y_pred = np.asarray(y_pred)
@@ -29,7 +31,9 @@ def mae_band_accuracy(y_true: np.ndarray, y_pred: np.ndarray, band: float) -> fl
     return float(ok.mean() * 100.0)
 
 
-def compute_error_stats(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[float, float]:
+def compute_error_stats(
+    y_true: np.ndarray, y_pred: np.ndarray
+) -> Tuple[float, float]:
     """Compute MAE and the standard deviation of absolute errors.
 
     Args:
@@ -47,7 +51,9 @@ def compute_error_stats(y_true: np.ndarray, y_pred: np.ndarray) -> Tuple[float, 
     return mae, std
 
 
-def compute_accuracy_bands(y_true: np.ndarray, y_pred: np.ndarray, mae: float, std: float) -> Dict[str, float]:
+def compute_accuracy_bands(
+    y_true: np.ndarray, y_pred: np.ndarray, mae: float, std: float
+) -> Dict[str, float]:
     """Compute accuracy percentages for MAE and standard deviation bands.
 
     Args:

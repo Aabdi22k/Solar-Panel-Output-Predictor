@@ -10,13 +10,17 @@ import numpy as np
 import pandas as pd
 
 
-def predict_ghi(model, scaler, forecast_df: pd.DataFrame, *, date_col: str = "date") -> np.ndarray:
+def predict_ghi(
+    model, scaler, forecast_df: pd.DataFrame, *, date_col: str = "date"
+) -> np.ndarray:
     """Predict GHI values from a forecast feature DataFrame.
 
     Args:
-        model: Trained model object that implements predict(X).
-        scaler: Feature scaler/transformer object that implements transform(X).
-        forecast_df: Feature DataFrame containing a date column plus feature columns.
+        model: Trained model object that implements predict(features).
+        scaler: Feature scaler/transformer object that 
+            implements transform(features).
+        forecast_df: Feature DataFrame containing a date column 
+            plus feature columns.
         date_col: Name of the date column to drop before scaling/prediction.
 
     Returns:
@@ -25,6 +29,6 @@ def predict_ghi(model, scaler, forecast_df: pd.DataFrame, *, date_col: str = "da
     Raises:
         KeyError: If date_col is not present in forecast_df.
     """
-    X = forecast_df.drop(columns=[date_col])
-    X_scaled = scaler.transform(X)
-    return model.predict(X_scaled)
+    features = forecast_df.drop(columns=[date_col])
+    features_scaled = scaler.transform(features)
+    return model.predict(features_scaled)

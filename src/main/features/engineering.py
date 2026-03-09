@@ -1,7 +1,7 @@
 """Feature engineering utilities.
 
 This module builds derived features used by the model. It adds time-based
-seasonality features and a set of interaction/ratio features from weather
+seasonality features and a set of interaction and ratio features from weather
 columns when available.
 """
 
@@ -11,7 +11,10 @@ import numpy as np
 import pandas as pd
 
 
-def add_time_features(df: pd.DataFrame, date_col: str = "date") -> pd.DataFrame:
+def add_time_features(
+    df: pd.DataFrame,
+    date_col: str = "date",
+) -> pd.DataFrame:
     """Add seasonality features derived from a date column.
 
     Adds:
@@ -26,7 +29,6 @@ def add_time_features(df: pd.DataFrame, date_col: str = "date") -> pd.DataFrame:
     Returns:
         A copy of the input DataFrame with seasonality features added.
     """
-
     out = df.copy()
     dt_series = pd.to_datetime(out[date_col], errors="coerce")
     out[date_col] = dt_series
@@ -61,24 +63,39 @@ def add_interaction_features(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         A copy of the input DataFrame with interaction features added.
     """
-
     out = df.copy()
 
     if "sunshine_duration" in out.columns and "cloud_cover" in out.columns:
-        out["effective_sunshine"] = out["sunshine_duration"] * (1 - out["cloud_cover"])
+        out["effective_sunshine"] = out["sunshine_duration"] * (
+            1 - out["cloud_cover"]
+        )
 
-    if "sunshine_duration" in out.columns and "daylight_duration" in out.columns:
-        out["sunshine_ratio"] = out["sunshine_duration"] / (out["daylight_duration"] + 1e-5)
+    if (
+        "sunshine_duration" in out.columns
+        and "daylight_duration" in out.columns
+    ):
+        out["sunshine_ratio"] = out["sunshine_duration"] / (
+            out["daylight_duration"] + 1e-5
+        )
 
     if "tmax" in out.columns and "tmin" in out.columns:
         out["temp_range"] = out["tmax"] - out["tmin"]
 
     if "temp_range" in out.columns and "cloud_cover" in out.columns:
-        out["cloud_adjusted_temp_range"] = out["temp_range"] * (1 - out["cloud_cover"])
+        out["cloud_adjusted_temp_range"] = out["temp_range"] * (
+            1 - out["cloud_cover"]
+        )
 
     if "tavg" in out.columns:
         out["tavg_diff"] = out["tavg"].diff().fillna(0)
-        out["tavg_ewm_7"] = out["tavg"].ewm(span=7, adjust=False).mean()
+        out["tavg_ewm_7"] = (
+            out["tavg"]
+            .ewm(
+                span=7,
+                adjust=False,
+            )
+            .mean()
+        )
 
     if "wdir" in out.columns and "wspd" in out.columns:
         out["wdir_x_wspd"] = out["wdir"] * out["wspd"]
@@ -95,7 +112,6 @@ def engineer_features(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         A DataFrame with time and interaction features added.
     """
-    
     out = add_time_features(df)
     out = add_interaction_features(out)
     return out

@@ -14,7 +14,6 @@ from typing import Iterable
 import pandas as pd
 import requests
 
-
 NSRDB_GOES_AGG_URL = (
     "https://developer.nrel.gov/api/nsrdb/v2/solar/"
     "nsrdb-GOES-aggregated-v4-0-0-download.csv"
@@ -39,10 +38,12 @@ def fetch_nsrdb_half_hourly(
     Args:
         latitude: Latitude in decimal degrees.
         longitude: Longitude in decimal degrees.
-        years: Years to request (each value is passed to the NSRDB `names` param).
+        years: Years to request
+            (each value is passed to the NSRDB `names` param).
         api_key: NREL developer API key.
         email: Email address required by the NSRDB API.
-        sleep_seconds: Seconds to sleep between year requests to be polite to the API.
+        sleep_seconds: Seconds to sleep between year requests to be polite
+            to the API.
 
     Returns:
         A DataFrame containing concatenated half-hourly NSRDB records across all
@@ -52,7 +53,6 @@ def fetch_nsrdb_half_hourly(
         RuntimeError: If an NSRDB request returns a non-200 response.
         requests.RequestException: If a network-level error occurs.
     """
-    
     frames: list[pd.DataFrame] = []
 
     for year in years:
@@ -69,9 +69,8 @@ def fetch_nsrdb_half_hourly(
 
         resp = requests.get(NSRDB_GOES_AGG_URL, params=params, timeout=60)
         if resp.status_code != 200:
-            raise RuntimeError(
-                f"NREL NSRDB request failed for {year}: {resp.status_code} {resp.text[:200]}"
-            )
+            raise RuntimeError(f"""NREL NSRDB request failed for
+                    {year}: {resp.status_code} {resp.text[:200]}""")
 
         # NSRDB CSV has extra header rows; your original used skiprows=2
         df_year = pd.read_csv(io.StringIO(resp.text), skiprows=2)

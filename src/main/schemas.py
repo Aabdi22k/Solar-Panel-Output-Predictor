@@ -44,7 +44,7 @@ class PredictionResult:
         bands_2std: (low, high) bounds computed using ±2 std.
         bands_3std: (low, high) bounds computed using ±3 std.
     """
-    
+
     dates: pd.Series
     ghi_pred: np.ndarray
     bands_mae: list[Tuple[float, float]]

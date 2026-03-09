@@ -18,6 +18,7 @@ class Location:
         longitude: Longitude in decimal degrees.
         name: Human-readable location name.
     """
+
     latitude: float
     longitude: float
     name: str = "Unknown"
@@ -64,7 +65,7 @@ class AppDefaults:
         array_area_m2: Default solar array area in square meters.
         panel_efficiency: Default panel efficiency as a fraction (0-1).
     """
-    
+
     location: Location = Location(33.448376, -112.074036, "Phoenix, AZ")
     array_area_m2: float = 10.0
     panel_efficiency: float = 0.15

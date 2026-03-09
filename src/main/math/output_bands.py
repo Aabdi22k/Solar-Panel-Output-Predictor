@@ -7,10 +7,11 @@ given array area and panel efficiency, and builds low/high output intervals.
 from __future__ import annotations
 
 from typing import Iterable, Tuple
-import numpy as np
 
 
-def _to_output_kwh(array_area_m2: float, efficiency: float, ghi_wh_m2: float) -> float:
+def _to_output_kwh(
+    array_area_m2: float, efficiency: float, ghi_wh_m2: float
+) -> float:
     """Convert a GHI value into estimated energy output in kWh.
 
     Args:
@@ -42,7 +43,8 @@ def output_bands(
         array_area_m2: Solar array area in square meters.
         efficiency: Panel efficiency as a fraction (0-1).
         ghi_pred: Iterable of predicted GHI values.
-        band: Band width applied to each prediction (low = pred - band, high = pred + band).
+        band: Band width applied to each prediction
+            (low = pred - band, high = pred + band).
 
     Returns:
         A list of (low_kwh, high_kwh) tuples for each predicted value.
@@ -75,10 +77,25 @@ def output_bands_std(
         A dict with keys "1std", "2std", "3std", each mapping to a list of
         (low_kwh, high_kwh) tuples.
     """
-    
+
     ghi_pred = list(ghi_pred)
     return {
-        "1std": output_bands(array_area_m2=array_area_m2, efficiency=efficiency, ghi_pred=ghi_pred, band=std),
-        "2std": output_bands(array_area_m2=array_area_m2, efficiency=efficiency, ghi_pred=ghi_pred, band=2 * std),
-        "3std": output_bands(array_area_m2=array_area_m2, efficiency=efficiency, ghi_pred=ghi_pred, band=3 * std),
+        "1std": output_bands(
+            array_area_m2=array_area_m2,
+            efficiency=efficiency,
+            ghi_pred=ghi_pred,
+            band=std,
+        ),
+        "2std": output_bands(
+            array_area_m2=array_area_m2,
+            efficiency=efficiency,
+            ghi_pred=ghi_pred,
+            band=2 * std,
+        ),
+        "3std": output_bands(
+            array_area_m2=array_area_m2,
+            efficiency=efficiency,
+            ghi_pred=ghi_pred,
+            band=3 * std,
+        ),
     }
