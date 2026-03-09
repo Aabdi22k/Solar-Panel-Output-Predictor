@@ -197,9 +197,9 @@ def main() -> None:
     st.subheader("📈 Model Accuracy")
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("±MAE", f"{artifacts.accuracy_bands["MAE"]:.2f}%")
-    c2.metric("±1 STD", f"{artifacts.accuracy_bands["1std"]:.2f}%")
-    c3.metric("±2 STD", f"{artifacts.accuracy_bands["2std"]:.2f}%")
-    c4.metric("±3 STD", f"{artifacts.accuracy_bands["3std"]:.2f}%")
+    c2.metric("±1 STD", f"{artifacts.accuracy_bands['1std']:.2f}%")
+    c3.metric("±2 STD", f"{artifacts.accuracy_bands['2std']:.2f}%")
+    c4.metric("±3 STD", f"{artifacts.accuracy_bands['3std']:.2f}%")
 
     st.subheader("🔮 5-Day Forecast (Starting Tomorrow)")
     start = date.today() + timedelta(days=1)
