@@ -1,4 +1,4 @@
-# ☀️ Solar Panel Output Predictor (SPOP)
+# Solar Panel Output Predictor (SPOP)
 
 A modular machine learning forecasting system that predicts daily solar energy output for a given location.
 
@@ -8,7 +8,7 @@ This is not a notebook experiment — it is a structured, reproducible ML system
 
 ---
 
-## 🚀 Core Capabilities
+## Core Capabilities
 
 - Predict daily Global Horizontal Irradiance (GHI)
 - Convert GHI → solar energy output (kWh)
@@ -19,7 +19,7 @@ This is not a notebook experiment — it is a structured, reproducible ML system
 
 ---
 
-## 🧠 System Architecture
+## System Architecture
 
 SPOP is structured as a modular pipeline:
 
@@ -58,7 +58,7 @@ Each layer is isolated to ensure maintainability, reproducibility, and scalabili
 
 ---
 
-## 📊 Forecast Methodology
+## Forecast Methodology
 
 1. Retrieve weather forecasts for a specified latitude and longitude.
 2. Generate engineered features (seasonality encoding, derived weather predictors).
@@ -77,7 +77,7 @@ Energy (kWh) = GHI × panel_area × efficiency
 
 ---
 
-## 🛠 Technology Stack
+## Technology Stack
 
 - Python
 - scikit-learn (Random Forest)
@@ -87,7 +87,7 @@ Energy (kWh) = GHI × panel_area × efficiency
 
 ---
 
-## ⚙️ Running Locally
+## Running Locally
 
 ### 1. Clone
 
@@ -134,7 +134,7 @@ The application will:
 
 ---
 
-## 📁 Documentation
+## Documentation
 
 Full project documentation (architecture, API reference, methodology) is available in the `/docs` directory.
 
@@ -147,7 +147,7 @@ make html
 
 ---
 
-## 🔮 Future Improvements
+## Future Improvements
 
 - Time-series cross-validation
 - Hyperparameter tuning
@@ -159,7 +159,7 @@ make html
 
 ---
 
-## 🎯 Project Scope
+## Project Scope
 
 SPOP is designed as a production-aware ML forecasting foundation.
 
@@ -173,6 +173,7 @@ It demonstrates:
 - Structured documentation
 
 
-## 📌 License
+## License
+
 
 MIT 
