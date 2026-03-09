@@ -172,8 +172,7 @@ It demonstrates:
 - Uncertainty modeling
 - Structured documentation
 
----
 
 ## 📌 License
 
-MIT (or your chosen license)
+MIT 
