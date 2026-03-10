@@ -209,7 +209,7 @@ def main() -> None:
     for i, forecast_date in enumerate(dates):
         col = cols[i % 3]
         with col:
-            st.markdown(f"### {forecast_date.strftime("%b %d, %Y")}")
+            st.markdown(f"### {forecast_date.strftime('%b %d, %Y')}")
             st.write(f"**GHI:** {(ghi_pred[i] / 1000):.2f} kW/m²")
             st.write(
                 f"**Output (±MAE):** "
