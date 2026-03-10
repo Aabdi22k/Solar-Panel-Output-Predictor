@@ -217,18 +217,18 @@ def main() -> None:
             )
             st.write(
                 f"**Output (±1 STD):** "
-                f"{std_bands["1std"][i][0]:.2f} – "
-                f"{std_bands["1std"][i][1]:.2f} kWh"
+                f"{std_bands['1std'][i][0]:.2f} – "
+                f"{std_bands['1std'][i][1]:.2f} kWh"
             )
             st.write(
                 f"**Output (±2 STD):** "
-                f"{std_bands["2std"][i][0]:.2f} – "
-                f"{std_bands["2std"][i][1]:.2f} kWh"
+                f"{std_bands['2std'][i][0]:.2f} – "
+                f"{std_bands['2std'][i][1]:.2f} kWh"
             )
             st.write(
                 f"**Output (±3 STD):** "
-                f"{std_bands["3std"][i][0]:.2f} – "
-                f"{std_bands["3std"][i][1]:.2f} kWh"
+                f"{std_bands['3std'][i][0]:.2f} – "
+                f"{std_bands['3std'][i][1]:.2f} kWh"
             )
 
 
