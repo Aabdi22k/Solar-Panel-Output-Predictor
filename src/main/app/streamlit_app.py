@@ -60,7 +60,7 @@ def _get_secret(key: str, default: str = "") -> str:
 
     try:
         return st.secrets.get(key, default)
-    except st.StreamlitSecretNotFoundError:
+    except st.errors.StreamlitSecretNotFoundError:
         return default
 
 
