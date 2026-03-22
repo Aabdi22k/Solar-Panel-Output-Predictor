@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GHI Forecast Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body class="bg-[#101010] text-white min-h-screen max-h-screen overflow-hidden flex px-6 py-4">
+  <main class="w-full flex flex-col gap-6">
+    <header class="topbar">
+      <div class="relative">
+        <button
+          id="locationTrigger"
+          type="button"
+          class="location-trigger"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+        >
+          <span class="location-left">
+            <i data-lucide="map-pin" class="topbar-icon"></i>
+            <span id="selectedLocation" class="location-label">Seattle, Washington</span>
+          </span>
+          <i data-lucide="chevron-down" class="topbar-icon chevron"></i>
+        </button>
+
+        <div id="locationMenu" class="location-menu hidden" role="listbox">
+          <button type="button" class="location-option is-selected" data-value="Seattle, Washington">
+            Seattle, Washington
+          </button>
+          <button type="button" class="location-option" data-value="Columbus, Ohio">
+            Columbus, Ohio
+          </button>
+          <button type="button" class="location-option" data-value="Phoenix, Arizona">
+            Phoenix, Arizona
+          </button>
+          <button type="button" class="location-option" data-value="Austin, Texas">
+            Austin, Texas
+          </button>
+          <button type="button" class="location-option" data-value="Chicago, Illinois">
+            Chicago, Illinois
+          </button>
+        </div>
+      </div>
+
+      <div class="topbar-title-wrap">
+        <h1 class="topbar-title">GHI Forecast Dashboard</h1>
+      </div>
+
+      <button
+        id="themeToggle"
+        type="button"
+        class="theme-toggle"
+        aria-label="Toggle theme"
+        aria-pressed="false"
+      >
+        <span class="theme-track">
+          <span class="theme-thumb"></span>
+          <span class="theme-icon-wrap theme-icon-left">
+            <i data-lucide="sun" class="theme-icon"></i>
+          </span>
+          <span class="theme-icon-wrap theme-icon-right">
+            <i data-lucide="moon" class="theme-icon"></i>
+          </span>
+        </span>
+      </button>
+    </header>
+
+    <div class="flex flex-row gap-6">
+      <div class="flex flex-col gap-6">
+        <section class="weather-shell min-w-[1100px]">
+          <div class="section-header">
+            <h2 class="section-title">Next 7 Days</h2>
+            <p class="section-subtitle">GHI predictions over the following week</p>
+          </div>
+
+          <div id="pillRow" class="forecast-row">
+            <button class="forecast-pill is-active" type="button" data-ghi="13.01">
+              <div class="pill-closed">
+                <div class="pill-day">Today</div>
+                <div class="temp-small">13.01</div>
+                <div class="unit-small">kW/m²</div>
+              </div>
+
+              <div class="pill-open">
+                <div class="pill-head">
+                  <span class="pill-day-open">Today</span>
+                  <span class="pill-time">03/21/2026</span>
+                </div>
+
+                <div class="pill-main-open">
+                  <div class="temp-large">13.01</div>
+                  <div class="unit-large">kW/m²</div>
+                </div>
+
+                <div class="pill-details">
+                  <div class="pill-details-output">
+                    <p>18.66 - 20.36 kWh</p>
+                    <p>± MAE</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>18.31 - 20.71 kWh</p>
+                    <p>±1 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>17.11 - 21.91 kWh</p>
+                    <p>±2 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>15.91 - 23.11 kWh</p>
+                    <p>±3 STD</p>
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button class="forecast-pill" type="button" data-ghi="10.42">
+              <div class="pill-closed">
+                <div class="pill-day">Tue</div>
+                <div class="temp-small">10.42</div>
+                <div class="unit-small">kW/m²</div>
+              </div>
+
+              <div class="pill-open">
+                <div class="pill-head">
+                  <span class="pill-day-open">Tuesday</span>
+                  <span class="pill-time">03/22/2026</span>
+                </div>
+
+                <div class="pill-main-open">
+                  <div class="temp-large">10.42</div>
+                  <div class="unit-large">kW/m²</div>
+                </div>
+
+                <div class="pill-details">
+                  <div class="pill-details-output">
+                    <p>14.89 - 16.05 kWh</p>
+                    <p>± MAE</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>14.51 - 16.43 kWh</p>
+                    <p>±1 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>13.74 - 17.20 kWh</p>
+                    <p>±2 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>12.96 - 17.98 kWh</p>
+                    <p>±3 STD</p>
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button class="forecast-pill" type="button" data-ghi="15.37">
+              <div class="pill-closed">
+                <div class="pill-day">Wed</div>
+                <div class="temp-small">15.37</div>
+                <div class="unit-small">kW/m²</div>
+              </div>
+
+              <div class="pill-open">
+                <div class="pill-head">
+                  <span class="pill-day-open">Wednesday</span>
+                  <span class="pill-time">03/23/2026</span>
+                </div>
+
+                <div class="pill-main-open">
+                  <div class="temp-large">15.37</div>
+                  <div class="unit-large">kW/m²</div>
+                </div>
+
+                <div class="pill-details">
+                  <div class="pill-details-output">
+                    <p>22.11 - 23.47 kWh</p>
+                    <p>± MAE</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>21.76 - 23.82 kWh</p>
+                    <p>±1 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>20.98 - 24.60 kWh</p>
+                    <p>±2 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>20.23 - 25.35 kWh</p>
+                    <p>±3 STD</p>
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button class="forecast-pill" type="button" data-ghi="11.28">
+              <div class="pill-closed">
+                <div class="pill-day">Thu</div>
+                <div class="temp-small">11.28</div>
+                <div class="unit-small">kW/m²</div>
+              </div>
+
+              <div class="pill-open">
+                <div class="pill-head">
+                  <span class="pill-day-open">Thursday</span>
+                  <span class="pill-time">03/24/2026</span>
+                </div>
+
+                <div class="pill-main-open">
+                  <div class="temp-large">11.28</div>
+                  <div class="unit-large">kW/m²</div>
+                </div>
+
+                <div class="pill-details">
+                  <div class="pill-details-output">
+                    <p>16.14 - 17.70 kWh</p>
+                    <p>± MAE</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>15.78 - 18.06 kWh</p>
+                    <p>±1 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>15.01 - 18.83 kWh</p>
+                    <p>±2 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>14.26 - 19.58 kWh</p>
+                    <p>±3 STD</p>
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button class="forecast-pill" type="button" data-ghi="18.04">
+              <div class="pill-closed">
+                <div class="pill-day">Fri</div>
+                <div class="temp-small">18.04</div>
+                <div class="unit-small">kW/m²</div>
+              </div>
+
+              <div class="pill-open">
+                <div class="pill-head">
+                  <span class="pill-day-open">Friday</span>
+                  <span class="pill-time">03/25/2026</span>
+                </div>
+
+                <div class="pill-main-open">
+                  <div class="temp-large">18.04</div>
+                  <div class="unit-large">kW/m²</div>
+                </div>
+
+                <div class="pill-details">
+                  <div class="pill-details-output">
+                    <p>26.12 - 27.40 kWh</p>
+                    <p>± MAE</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>25.79 - 27.73 kWh</p>
+                    <p>±1 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>25.03 - 28.49 kWh</p>
+                    <p>±2 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>24.26 - 29.26 kWh</p>
+                    <p>±3 STD</p>
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button class="forecast-pill" type="button" data-ghi="12.64">
+              <div class="pill-closed">
+                <div class="pill-day">Sat</div>
+                <div class="temp-small">12.64</div>
+                <div class="unit-small">kW/m²</div>
+              </div>
+
+              <div class="pill-open">
+                <div class="pill-head">
+                  <span class="pill-day-open">Saturday</span>
+                  <span class="pill-time">03/26/2026</span>
+                </div>
+
+                <div class="pill-main-open">
+                  <div class="temp-large">12.64</div>
+                  <div class="unit-large">kW/m²</div>
+                </div>
+
+                <div class="pill-details">
+                  <div class="pill-details-output">
+                    <p>18.09 - 19.59 kWh</p>
+                    <p>± MAE</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>17.71 - 19.97 kWh</p>
+                    <p>±1 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>16.94 - 20.74 kWh</p>
+                    <p>±2 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>16.18 - 21.50 kWh</p>
+                    <p>±3 STD</p>
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            <button class="forecast-pill" type="button" data-ghi="10.08">
+              <div class="pill-closed">
+                <div class="pill-day">Sun</div>
+                <div class="temp-small">10.08</div>
+                <div class="unit-small">kW/m²</div>
+              </div>
+
+              <div class="pill-open">
+                <div class="pill-head">
+                  <span class="pill-day-open">Sunday</span>
+                  <span class="pill-time">03/27/2026</span>
+                </div>
+
+                <div class="pill-main-open">
+                  <div class="temp-large">10.08</div>
+                  <div class="unit-large">kW/m²</div>
+                </div>
+
+                <div class="pill-details">
+                  <div class="pill-details-output">
+                    <p>14.33 - 15.49 kWh</p>
+                    <p>± MAE</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>13.96 - 15.86 kWh</p>
+                    <p>±1 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>13.18 - 16.64 kWh</p>
+                    <p>±2 STD</p>
+                  </div>
+                  <div class="pill-details-output">
+                    <p>12.42 - 17.40 kWh</p>
+                    <p>±3 STD</p>
+                  </div>
+                </div>
+              </div>
+            </button>
+          </div>
+        </section>
+
+        <section class="forecast-actual-section">
+          <div class="section-header">
+            <h2 class="section-title">Forecast vs Actual Value</h2>
+            <p class="section-subtitle">
+              Actual GHI versus predicted GHI over recent recorded days
+            </p>
+          </div>
+
+          <div class="chart-pill">
+            <div class="chart-top">
+              <div>
+                <h3 class="chart-title">GHI Trend</h3>
+                <p class="chart-caption">Predicted vs actual model performance</p>
+              </div>
+
+              <div class="chart-legend">
+                <div class="legend-item">
+                  <span class="legend-dot legend-dot-actual"></span>
+                  <span>Predicted GHI</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot legend-dot-predicted"></span>
+                  <span>Actual GHI</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="chart-wrap">
+              <canvas id="ghiTrendChart"></canvas>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="flex flex-col gap-6">
+        <section class="metrics-section">
+          <div class="section-header">
+            <h2 class="section-title">Metrics</h2>
+            <p class="section-subtitle">Model accuracy bands and expected prediction spread</p>
+          </div>
+
+          <div class="metrics-grid-compact">
+            <article class="metric-card-compact">
+              <p class="metric-band">±MAE</p>
+
+              <div class="metric-inline-row">
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label">Model</span>
+                  <span class="metric-inline-value">69.24%</span>
+                </div>
+
+                <div class="metric-inline-divider"></div>
+
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label metric-inline-label-muted">Actual</span>
+                  <span class="metric-inline-value metric-inline-value-muted">66.91%</span>
+                </div>
+              </div>
+
+              <div class="metric-delta-pill metric-delta-negative">
+                <span>Delta</span>
+                <strong>-2.33%</strong>
+              </div>
+
+              <p class="metric-compact-description">
+                69.24% of predictions fall within the MAE band, while 66.91% of actual values fall inside that same range.
+              </p>
+            </article>
+
+            <article class="metric-card-compact">
+              <p class="metric-band">±1 STD</p>
+
+              <div class="metric-inline-row">
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label">Model</span>
+                  <span class="metric-inline-value">78.71%</span>
+                </div>
+
+                <div class="metric-inline-divider"></div>
+
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label metric-inline-label-muted">Actual</span>
+                  <span class="metric-inline-value metric-inline-value-muted">75.84%</span>
+                </div>
+              </div>
+
+              <div class="metric-delta-pill metric-delta-negative">
+                <span>Delta</span>
+                <strong>-2.87%</strong>
+              </div>
+
+              <p class="metric-compact-description">
+                78.71% of predictions fall within one standard deviation, compared with 75.84% coverage from actual values.
+              </p>
+            </article>
+
+            <article class="metric-card-compact">
+              <p class="metric-band">±2 STD</p>
+
+              <div class="metric-inline-row">
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label">Model</span>
+                  <span class="metric-inline-value">91.94%</span>
+                </div>
+
+                <div class="metric-inline-divider"></div>
+
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label metric-inline-label-muted">Actual</span>
+                  <span class="metric-inline-value metric-inline-value-muted">89.62%</span>
+                </div>
+              </div>
+
+              <div class="metric-delta-pill metric-delta-negative">
+                <span>Delta</span>
+                <strong>-2.32%</strong>
+              </div>
+
+              <p class="metric-compact-description">
+                91.94% of predictions fall within two standard deviations, while actual values land inside that interval 89.62% of the time.
+              </p>
+            </article>
+
+            <article class="metric-card-compact">
+              <p class="metric-band">±3 STD</p>
+
+              <div class="metric-inline-row">
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label">Model</span>
+                  <span class="metric-inline-value">96.26%</span>
+                </div>
+
+                <div class="metric-inline-divider"></div>
+
+                <div class="metric-inline-block">
+                  <span class="metric-inline-label metric-inline-label-muted">Actual</span>
+                  <span class="metric-inline-value metric-inline-value-muted">95.11%</span>
+                </div>
+              </div>
+
+              <div class="metric-delta-pill metric-delta-negative">
+                <span>Delta</span>
+                <strong>-1.15%</strong>
+              </div>
+
+              <p class="metric-compact-description">
+                96.26% of predictions fall within three standard deviations, versus 95.11% for actual observed values.
+              </p>
+            </article>
+          </div>
+        </section>
+
+        <section class="solar-output-section">
+          <div class="solar-card">
+            <div class="section-header">
+              <h3 class="section-title">Solar Output Estimator</h3>
+              <p class="section-subtitle">
+                Estimate energy output using forecasted GHI, panel array size, and efficiency.
+              </p>
+            </div>
+
+            <div class="solar-input-output">
+              <div class="solar-form-grid w-[50%]">
+                <div class="solar-field">
+                  <label for="arraySize" class="solar-label">Panel Array Size</label>
+                  <div class="solar-input-wrap">
+                    <input
+                      id="arraySize"
+                      class="solar-input"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      placeholder="e.g. 20"
+                    />
+                    <span class="solar-input-unit">m²</span>
+                  </div>
+                </div>
+
+                <div class="solar-field">
+                  <label for="panelEfficiency" class="solar-label">Panel Efficiency</label>
+                  <div class="solar-input-wrap">
+                    <input
+                      id="panelEfficiency"
+                      class="solar-input"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder="e.g. 22"
+                    />
+                    <span class="solar-input-unit">%</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="solar-estimate-block">
+                <span class="solar-estimate-label">Estimated Output</span>
+                <div class="solar-estimate-value-row">
+                  <span id="estimatedOutput" class="solar-estimate-value">13.01</span>
+                  <span class="solar-estimate-unit">kWh</span>
+                </div>
+                <p class="solar-estimate-note">
+                  Based on current forecasted GHI of
+                  <span id="currentGhiValue">13.01</span> kWh/m².
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="/static/script.js"></script>
+</body>
+</html>
