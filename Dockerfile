@@ -15,4 +15,4 @@ ENV PYTHONPATH=/app/src
 
 EXPOSE 8501
 
-CMD ["streamlit", "run", "src/main/app/streamlit_app.py", "--server.port", "8501", "--server.address", "0.0.0.0", "--server.enableCORS=false", "--server.enableXsrfProtection=false", "--browser.gatherUsageStats=false"]
+CMD ["python", "run_api.py"]
