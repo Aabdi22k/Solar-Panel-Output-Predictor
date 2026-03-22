@@ -15,4 +15,4 @@ ENV PYTHONPATH=/app/src
 
 EXPOSE 8501
 
-CMD ["python", "run_api.py"]
+CMD ["python", "src/main/app/run_api.py"]
