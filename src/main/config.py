@@ -14,14 +14,18 @@ class Location:
     """Represents a geographic location.
 
     Attributes:
+        key: Stable internal identifier for the location.
         latitude: Latitude in decimal degrees.
         longitude: Longitude in decimal degrees.
         name: Human-readable location name.
+        timezone: IANA timezone name for the location.
     """
 
+    key: str
     latitude: float
     longitude: float
     name: str = "Unknown"
+    timezone: str = "UTC"
 
 
 @dataclass(frozen=True)
@@ -52,7 +56,7 @@ class ForecastConfig:
         timezone: Timezone used to align forecast timestamps.
     """
 
-    days: int = 5
+    days: int = 7
     timezone: str = "auto"
 
 
@@ -66,6 +70,30 @@ class AppDefaults:
         panel_efficiency: Default panel efficiency as a fraction (0-1).
     """
 
-    location: Location = Location(33.448376, -112.074036, "Phoenix, AZ")
     array_area_m2: float = 10.0
     panel_efficiency: float = 0.15
+    LOCATIONS: tuple[Location, ...] = (
+        Location(
+            key="phoenix",
+            latitude=33.448376,
+            longitude=-112.074036,
+            name="Phoenix, AZ",
+            timezone="America/Phoenix",
+        ),
+        # Add more later:
+        # Location(
+        #     key="columbus",
+        #     latitude=39.961176,
+        #     longitude=-82.998794,
+        #     name="Columbus, OH",
+        #     timezone="America/New_York",
+        # ),
+        # Location(
+        #     key="seattle",
+        #     latitude=47.606209,
+        #     longitude=-122.332069,
+        #     name="Seattle, WA",
+        #     timezone="America/Los_Angeles",
+        # ),
+    )
+    location: Location = LOCATIONS[0]

@@ -203,3 +203,76 @@ def fetch_forecast_weather_daily(
         df_daily["daylight_duration"] = None
 
     return df_daily
+
+
+def fetch_actual_ghi_today(
+    *,
+    latitude: float,
+    longitude: float,
+    target_date: date,
+    timezone: str = "auto",
+) -> float | None:
+    """
+    Fetch actual daily GHI (Global Horizontal Irradiance) for a given date.
+
+    Uses Open-Meteo archive API and aggregates hourly shortwave_radiation
+    into daily kWh/m².
+
+    Args:
+        latitude: Latitude in decimal degrees.
+        longitude: Longitude in decimal degrees.
+        target_date: Date to fetch actual GHI for.
+        timezone: Timezone for alignment.
+
+    Returns:
+        Daily GHI in kWh/m², or None if unavailable.
+    """
+
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "start_date": target_date.strftime("%Y-%m-%d"),
+        "end_date": target_date.strftime("%Y-%m-%d"),
+        "hourly": "shortwave_radiation",
+        "timezone": timezone,
+    }
+
+    resp = requests.get(ARCHIVE_URL, params=params, timeout=60)
+
+    if resp.status_code != 200:
+        raise RuntimeError(
+            f"Open-Meteo GHI archive failed: {resp.status_code} {resp.text[:200]}"
+        )
+
+    payload = resp.json()
+    hourly = payload.get("hourly", {})
+
+    if not hourly or "shortwave_radiation" not in hourly:
+        return None
+
+    df = pd.DataFrame({
+        "time": hourly.get("time"),
+        "ghi": hourly.get("shortwave_radiation"),
+    })
+
+    if df.empty:
+        return None
+
+    # Convert time
+    dt_series = pd.to_datetime(df["time"], errors="coerce")
+    df["date"] = pd.DatetimeIndex(dt_series).date
+
+    # Filter to target date only (safety)
+    df = df[df["date"] == target_date]
+
+    if df.empty:
+        return None
+
+    # shortwave_radiation is in W/m² (hourly average)
+    # Convert to energy:
+    # Wh/m² = sum(W/m² over each hour)
+    # kWh/m² = Wh/m² / 1000
+    ghi_wh_m2 = df["ghi"].sum()
+    ghi_kwh_m2 = ghi_wh_m2 / 1000.0
+
+    return round(float(ghi_kwh_m2), 2)

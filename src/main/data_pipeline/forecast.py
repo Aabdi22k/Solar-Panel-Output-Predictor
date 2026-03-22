@@ -43,7 +43,7 @@ def build_forecast_features(
     Raises:
         RuntimeError: If Open-Meteo forecast retrieval fails.
     """
-    start = date.today() + timedelta(days=1)
+    start = date.today()
     end = start + timedelta(days=days - 1)
 
     filename = f"forecast_{latitude}_{longitude}_{start}_to_{end}.csv"
