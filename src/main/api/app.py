@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import os
+import threading
+import dotenv
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from unittest.mock import DEFAULT
+from zoneinfo import ZoneInfo
 
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,21 +13,22 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from main.config import AppDefaults, Location, TrainingConfig
-from main.data_pipeline.build_dataset import build_training_dataset
-from main.data_pipeline.forecast import build_forecast_features
-from main.models.history import load_history_file, calculate_accuracy_bands_percent
-from main.models.predict import predict_ghi
-from main.models.train import (
+from src.main.config import AppDefaults, Location, TrainingConfig
+from src.main.data_pipeline.build_dataset import build_training_dataset
+from src.main.data_pipeline.forecast import build_forecast_features
+from src.main.models.history import load_history_file, calculate_accuracy_bands_percent
+from src.main.models.predict import predict_ghi
+from src.main.models.train import (
     load_artifacts,
     save_artifacts,
     train_random_forest,
 )
-from main.paths import ProjectPaths
+from src.main.paths import ProjectPaths
+
+dotenv.load_dotenv()  # Load environment variables from .env file if present
 
 
 app = FastAPI(title="Solar Output Predictor API", version="1.0.0")
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -37,11 +40,15 @@ app.add_middleware(
 
 DEFAULTS = AppDefaults()
 TRAINING = TrainingConfig()
-
 REPO_ROOT = Path(__file__).resolve().parents[3]
-
 FRONTEND_DIR = REPO_ROOT / "src" / "main" / "frontend"
+
 app.mount("/static", StaticFiles(directory=FRONTEND_DIR), name="static")
+
+# In-process training coordination
+TRAINING_LOCKS: dict[str, threading.Lock] = {}
+TRAINING_STATUS: dict[str, dict] = {}
+
 
 def _get_location_by_key(location_key: str) -> Location:
     for location in DEFAULTS.LOCATIONS:
@@ -95,51 +102,138 @@ def _label_for_future_date(forecast_date: date) -> str:
     return forecast_date.strftime("%a")
 
 
-def load_or_train(lat: float, lon: float, repo_root: Path):
+def _get_training_lock(tag: str) -> threading.Lock:
+    if tag not in TRAINING_LOCKS:
+        TRAINING_LOCKS[tag] = threading.Lock()
+    return TRAINING_LOCKS[tag]
+
+
+def _set_training_status(
+    tag: str,
+    *,
+    state: str,
+    message: str,
+    location_key: str | None = None,
+) -> None:
+    TRAINING_STATUS[tag] = {
+        "tag": tag,
+        "state": state,
+        "message": message,
+        "location_key": location_key,
+        "updated_at": datetime.now(UTC).isoformat(),
+    }
+
+
+def _artifact_paths(paths: ProjectPaths, tag: str) -> tuple[Path, Path, Path]:
+    model_path = paths.models_dir / f"model_{tag}.joblib"
+    meta_path = paths.models_dir / f"meta_{tag}.json"
+    scaler_path = paths.models_dir / f"scaler_{tag}.joblib"
+    return model_path, meta_path, scaler_path
+
+
+def _artifacts_exist(paths: ProjectPaths, tag: str) -> bool:
+    model_path, meta_path, scaler_path = _artifact_paths(paths, tag)
+    return model_path.exists() and meta_path.exists() and scaler_path.exists()
+
+
+def load_or_train(
+    lat: float,
+    lon: float,
+    repo_root: Path,
+    timezone: str = "UTC",
+    location_key: str = "unknown",
+):
     paths = ProjectPaths.from_repo_root(repo_root)
     paths.ensure_dirs()
 
     tag = _tag_for_location(lat, lon)
-    model_path = paths.models_dir / f"model_{tag}.joblib"
-    meta_path = paths.models_dir / f"meta_{tag}.json"
-    scaler_path = paths.models_dir / f"scaler_{tag}.joblib"
 
-    if model_path.exists() and meta_path.exists() and scaler_path.exists():
+    if _artifacts_exist(paths, tag):
         artifacts = load_artifacts(models_dir=paths.models_dir, tag=tag)
-        return artifacts, paths
+        _set_training_status(
+            tag,
+            state="ready",
+            message="Model artifacts already available.",
+            location_key=location_key,
+        )
+        return artifacts, paths, False
 
-    years = list(range(TRAINING.start_year, TRAINING.end_year + 1))
-    nrel_api_key = _get_secret("NREL_API_KEY")
-    nrel_email = _get_secret("NREL_EMAIL")
+    lock = _get_training_lock(tag)
 
-    if not nrel_api_key or not nrel_email:
-        raise RuntimeError(
-            "Missing NREL_API_KEY / NREL_EMAIL in environment variables."
+    with lock:
+        # Another request may have finished training while we were waiting.
+        if _artifacts_exist(paths, tag):
+            artifacts = load_artifacts(models_dir=paths.models_dir, tag=tag)
+            _set_training_status(
+                tag,
+                state="ready",
+                message="Model became available.",
+                location_key=location_key,
+            )
+            return artifacts, paths, False
+
+        years = list(range(TRAINING.start_year, TRAINING.end_year + 1))
+        nrel_api_key = _get_secret("NREL_API_KEY")
+        nrel_email = _get_secret("NREL_EMAIL")
+
+        if not nrel_api_key or not nrel_email:
+            _set_training_status(
+                tag,
+                state="error",
+                message="Missing NREL_API_KEY / NREL_EMAIL in environment variables.",
+                location_key=location_key,
+            )
+            raise RuntimeError(
+                "Missing NREL_API_KEY / NREL_EMAIL in environment variables."
+            )
+
+        _set_training_status(
+            tag,
+            state="training",
+            message="Building dataset and training model...",
+            location_key=location_key,
         )
 
-    dataset_cache = paths.raw_data_dir / (
-        f"nsrdb_{tag}_{TRAINING.start_year}_{TRAINING.end_year}.csv"
-    )
+        dataset_cache = paths.raw_data_dir / (
+            f"nsrdb_{tag}_{TRAINING.start_year}_{TRAINING.end_year}.csv"
+        )
 
-    df = build_training_dataset(
-        latitude=lat,
-        longitude=lon,
-        years=years,
-        nrel_api_key=nrel_api_key,
-        nrel_email=nrel_email,
-        open_meteo_start=date(TRAINING.start_year, 1, 1),
-        open_meteo_end=date(TRAINING.end_year, 12, 31),
-        cache_csv_path=dataset_cache,
-    )
+        try:
+            df = build_training_dataset(
+                latitude=lat,
+                longitude=lon,
+                years=years,
+                nrel_api_key=nrel_api_key,
+                nrel_email=nrel_email,
+                open_meteo_start=date(TRAINING.start_year, 1, 1),
+                open_meteo_end=date(TRAINING.end_year, 12, 31),
+                cache_csv_path=dataset_cache,
+                timezone=timezone,
+            )
 
-    artifacts = train_random_forest(
-        df,
-        test_size=TRAINING.test_size,
-        random_state=TRAINING.random_state,
-    )
-    save_artifacts(artifacts, models_dir=paths.models_dir, tag=tag)
+            artifacts = train_random_forest(
+                df,
+                test_size=TRAINING.test_size,
+                random_state=TRAINING.random_state,
+            )
+            save_artifacts(artifacts, models_dir=paths.models_dir, tag=tag)
 
-    return artifacts, paths
+            _set_training_status(
+                tag,
+                state="ready",
+                message="Model trained successfully.",
+                location_key=location_key,
+            )
+            return artifacts, paths, True
+
+        except Exception as exc:
+            _set_training_status(
+                tag,
+                state="error",
+                message=str(exc),
+                location_key=location_key,
+            )
+            raise
 
 
 class BandRange(BaseModel):
@@ -186,6 +280,7 @@ class ForecastMeta(BaseModel):
     array_area_m2: float
     panel_efficiency: float
     model_loaded_from_artifacts: bool
+    trained_on_request: bool
 
 
 class ForecastResponse(BaseModel):
@@ -194,13 +289,51 @@ class ForecastResponse(BaseModel):
     history: list[HistoryEntry]
     accuracy_bands_percent: dict[str, AccuracyBand]
 
+
+class ModelStatusResponse(BaseModel):
+    tag: str
+    state: str
+    message: str
+    location_key: str | None = None
+    updated_at: str
+    artifacts_exist: bool
+
+
 @app.get("/")
 def serve_index():
     return FileResponse(FRONTEND_DIR / "index.html")
 
+
 @app.get("/api/locations")
 def get_locations():
     return DEFAULTS.LOCATIONS
+
+
+@app.get("/api/model-status", response_model=ModelStatusResponse)
+def get_model_status(
+    location_key: str = Query(
+        default="phoenix",
+        description="Location key from /api/locations",
+    ),
+):
+    location = _get_location_by_key(location_key)
+    tag = _tag_for_location(location.latitude, location.longitude)
+
+    paths = ProjectPaths.from_repo_root(REPO_ROOT)
+    paths.ensure_dirs()
+
+    status = TRAINING_STATUS.get(tag) or {
+        "tag": tag,
+        "state": "ready" if _artifacts_exist(paths, tag) else "missing",
+        "message": "Model artifacts present." if _artifacts_exist(paths, tag) else "Model artifacts missing.",
+        "location_key": location_key,
+        "updated_at": datetime.now(UTC).isoformat(),
+    }
+
+    return ModelStatusResponse(
+        **status,
+        artifacts_exist=_artifacts_exist(paths, tag),
+    )
 
 
 @app.get("/api/forecast", response_model=ForecastResponse)
@@ -225,19 +358,21 @@ def get_forecast(
         location = _get_location_by_key(location_key)
         lat = location.latitude
         lon = location.longitude
+        location_tz = location.timezone
 
         tag = _tag_for_location(lat, lon)
         paths = ProjectPaths.from_repo_root(REPO_ROOT)
         paths.ensure_dirs()
 
-        model_path = paths.models_dir / f"model_{tag}.joblib"
-        meta_path = paths.models_dir / f"meta_{tag}.json"
-        scaler_path = paths.models_dir / f"scaler_{tag}.joblib"
-        already_trained = (
-            model_path.exists() and meta_path.exists() and scaler_path.exists()
-        )
+        already_trained = _artifacts_exist(paths, tag)
 
-        artifacts, paths = load_or_train(lat, lon, REPO_ROOT)
+        artifacts, paths, trained_on_request = load_or_train(
+            lat,
+            lon,
+            REPO_ROOT,
+            location_tz,
+            location_key=location_key,
+        )
 
         history_file = paths.history_file(tag)
 
@@ -258,18 +393,18 @@ def get_forecast(
         mae_kwh_m2 = float(artifacts.mae) / 1000.0
         std_kwh_m2 = float(artifacts.error_std) / 1000.0
 
-        today_date = date.today()
+        local_today = datetime.now(ZoneInfo(location_tz)).date()
         history = load_history_file(history_file)
 
         actual_accuracy_bands = calculate_accuracy_bands_percent(
-                                    history=history,
-                                    mae_kwh_m2=mae_kwh_m2,
-                                    std_kwh_m2=std_kwh_m2,
-                                )
+            history=history,
+            mae_kwh_m2=mae_kwh_m2,
+            std_kwh_m2=std_kwh_m2,
+        )
 
         forecast_days: list[ForecastDayResponse] = []
         for i, predicted_ghi in enumerate(ghi_pred_kwh_m2):
-            forecast_date = today_date + timedelta(days=i)
+            forecast_date = local_today + timedelta(days=i)
             estimated_output = round(
                 _compute_output_kwh(predicted_ghi, array_area_m2, panel_efficiency),
                 2,
@@ -326,7 +461,8 @@ def get_forecast(
                 forecast_horizon_days=7,
                 array_area_m2=array_area_m2,
                 panel_efficiency=panel_efficiency,
-                model_loaded_from_artifacts=already_trained,
+                model_loaded_from_artifacts=already_trained and not trained_on_request,
+                trained_on_request=trained_on_request,
             ),
             forecast_days=forecast_days,
             history=history_response,
@@ -335,3 +471,4 @@ def get_forecast(
 
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
+
