@@ -40,7 +40,7 @@ class TrainingConfig:
         random_state: Random seed for reproducibility.
     """
 
-    start_year: int = 2020
+    start_year: int = 1998
     end_year: int = 2023
     interval_minutes: int = 30
     test_size: float = 0.2
