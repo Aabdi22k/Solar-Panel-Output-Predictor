@@ -1,14 +1,34 @@
-document.addEventListener("DOMContentLoaded", () => {
-  loadLocations();
-  loadForecast();
+document.addEventListener("DOMContentLoaded", async () => {
   initIcons();
   initNavbar();
   bindForecastInputs();
   initGhiTrendChart();
+
+  await initializeApp();
 });
 
 let availableLocations = [];
 let selectedLocationKey = null;
+let isForecastLoading = false;
+
+/* ----------------------------- */
+/* App init                      */
+/* ----------------------------- */
+async function initializeApp() {
+  await loadLocations();
+  await loadForecast();
+}
+
+function setLoadingState(message = "Loading forecast...") {
+  const selectedLocation = document.getElementById("selectedLocation");
+  if (selectedLocation) {
+    selectedLocation.textContent = message;
+  }
+}
+
+async function wait(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 /* ----------------------------- */
 /* Icons                         */
@@ -46,11 +66,8 @@ function initNavbar() {
 
   function toggleLocationMenu() {
     const isHidden = locationMenu.classList.contains("hidden");
-    if (isHidden) {
-      openLocationMenu();
-    } else {
-      closeLocationMenu();
-    }
+    if (isHidden) openLocationMenu();
+    else closeLocationMenu();
   }
 
   locationTrigger.addEventListener("click", (event) => {
@@ -248,10 +265,52 @@ function renderGhiTrendChart(history) {
 }
 
 /* ----------------------------- */
+/* Model status                  */
+/* ----------------------------- */
+async function fetchModelStatus() {
+  const locationParam = selectedLocationKey
+    ? `location_key=${encodeURIComponent(selectedLocationKey)}`
+    : "location_key=phoenix";
+
+  const res = await fetch(`/api/model-status?${locationParam}`);
+  if (!res.ok) {
+    throw new Error(`Model status HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+async function waitForTrainingCompletion() {
+  let attempts = 0;
+
+  while (attempts < 120) {
+    const status = await fetchModelStatus();
+
+    if (status.state === "ready" && status.artifacts_exist) {
+      return status;
+    }
+
+    if (status.state === "error") {
+      throw new Error(status.message || "Model training failed.");
+    }
+
+    setLoadingState(status.message || "Training model...");
+    await wait(2000);
+    attempts += 1;
+  }
+
+  throw new Error("Timed out waiting for model training to finish.");
+}
+
+/* ----------------------------- */
 /* API load / render             */
 /* ----------------------------- */
 async function loadForecast() {
+  if (isForecastLoading) return;
+  isForecastLoading = true;
+
   try {
+    setLoadingState("Loading forecast...");
+
     const arrayArea = getArrayArea();
     const efficiency = getEfficiency();
 
@@ -259,20 +318,43 @@ async function loadForecast() {
       ? `location_key=${encodeURIComponent(selectedLocationKey)}&`
       : "";
 
-    const res = await fetch(
+    let res = await fetch(
       `/api/forecast?${locationParam}array_area_m2=${arrayArea}&panel_efficiency=${efficiency}`
     );
+
+    if (!res.ok) {
+      const errText = await res.text();
+
+      // If first request fails while training or server is still warming up,
+      // poll model status and retry once training finishes.
+      try {
+        const status = await fetchModelStatus();
+        if (status.state === "training" || status.state === "missing") {
+          setLoadingState(status.message || "Training model...");
+          await waitForTrainingCompletion();
+
+          res = await fetch(
+            `/api/forecast?${locationParam}array_area_m2=${arrayArea}&panel_efficiency=${efficiency}`
+          );
+        } else {
+          throw new Error(errText || `HTTP ${res.status}`);
+        }
+      } catch {
+        throw new Error(errText || `HTTP ${res.status}`);
+      }
+    }
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
     }
 
     const data = await res.json();
-    console.log("forecast data:", data);
-
     renderAll(data);
   } catch (err) {
     console.error("Forecast load failed:", err);
+    setLoadingState("Failed to load");
+  } finally {
+    isForecastLoading = false;
   }
 }
 
@@ -283,12 +365,10 @@ function renderAll(data) {
 
   const days = data.forecast_days || [];
   const today = days[0] || null;
-  const future = days.slice(1);
 
   renderTodaySummary(today);
   renderPills(days);
   renderSolarEstimator(today);
-  
   renderAccuracy(data.accuracy_bands_percent);
   renderGhiTrendChart(data.history);
 }
@@ -489,29 +569,12 @@ function renderAccuracy(acc) {
     const descEl = card.querySelector(".metric-compact-description");
     const deltaPill = card.querySelector(".metric-delta-pill");
 
-    if (bandEl) {
-      bandEl.textContent = cfg.label;
-    }
-
-    if (inlineValues[0]) {
-      inlineValues[0].textContent = `${model.toFixed(2)}%`;
-    }
-
-    if (inlineValues[1]) {
-      inlineValues[1].textContent = `${actual.toFixed(2)}%`;
-    }
-
-    if (deltaEl) {
-      deltaEl.textContent = `${delta >= 0 ? "+" : ""}${delta.toFixed(2)}%`;
-    }
-
-    if (deltaPill) {
-      deltaPill.classList.toggle("metric-delta-negative", delta < 0);
-    }
-
-    if (descEl) {
-      descEl.textContent = cfg.description(model.toFixed(2), actual.toFixed(2));
-    }
+    if (bandEl) bandEl.textContent = cfg.label;
+    if (inlineValues[0]) inlineValues[0].textContent = `${model.toFixed(2)}%`;
+    if (inlineValues[1]) inlineValues[1].textContent = `${actual.toFixed(2)}%`;
+    if (deltaEl) deltaEl.textContent = `${delta >= 0 ? "+" : ""}${delta.toFixed(2)}%`;
+    if (deltaPill) deltaPill.classList.toggle("metric-delta-negative", delta < 0);
+    if (descEl) descEl.textContent = cfg.description(model.toFixed(2), actual.toFixed(2));
   });
 }
 
@@ -553,7 +616,6 @@ function bindForecastInputs() {
 
 function debounce(fn, delay = 250) {
   let timer;
-
   return (...args) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), delay);
@@ -585,7 +647,7 @@ function formatChartDate(dateStr) {
 
   return date.toLocaleDateString("en-US", {
     month: "short",
-    day: "2-digit"
+    day: "numeric"
   });
 }
 
@@ -605,7 +667,7 @@ function getOpenDayLabel(label, dateStr) {
 
 async function loadLocations() {
   try {
-    const res = await fetch("api/locations");
+    const res = await fetch("/api/locations");
 
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}`);
@@ -614,15 +676,17 @@ async function loadLocations() {
     const locations = await res.json();
     availableLocations = Array.isArray(locations) ? locations : [];
 
-    if (!availableLocations.length) {
-      return;
+    if (!availableLocations.length) return;
+
+    if (!selectedLocationKey) {
+      selectedLocationKey = availableLocations[0].key;
     }
 
-    selectedLocationKey = availableLocations[0].key;
     renderLocationMenuOptions();
     updateSelectedLocationLabel();
   } catch (err) {
     console.error("Failed to load locations:", err);
+    setLoadingState("Failed to load locations");
   }
 }
 
@@ -645,7 +709,7 @@ function renderLocationMenuOptions() {
       button.classList.add("is-selected");
     }
 
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       selectedLocationKey = location.key;
       updateSelectedLocationLabel();
       renderLocationMenuOptions();
@@ -656,7 +720,7 @@ function renderLocationMenuOptions() {
         locationTrigger.setAttribute("aria-expanded", "false");
       }
 
-      loadForecast();
+      await loadForecast();
     });
 
     locationMenu.appendChild(button);
