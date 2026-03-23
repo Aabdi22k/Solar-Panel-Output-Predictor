@@ -13,17 +13,17 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from src.main.config import AppDefaults, Location, TrainingConfig
-from src.main.data_pipeline.build_dataset import build_training_dataset
-from src.main.data_pipeline.forecast import build_forecast_features
-from src.main.models.history import load_history_file, calculate_accuracy_bands_percent
-from src.main.models.predict import predict_ghi
-from src.main.models.train import (
+from main.config import AppDefaults, Location, TrainingConfig
+from main.data_pipeline.build_dataset import build_training_dataset
+from main.data_pipeline.forecast import build_forecast_features
+from main.models.history import load_history_file, calculate_accuracy_bands_percent
+from main.models.predict import predict_ghi
+from main.models.train import (
     load_artifacts,
     save_artifacts,
     train_random_forest,
 )
-from src.main.paths import ProjectPaths
+from main.paths import ProjectPaths
 
 dotenv.load_dotenv()  # Load environment variables from .env file if present
 

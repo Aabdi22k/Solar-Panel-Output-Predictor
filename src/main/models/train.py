@@ -14,8 +14,8 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 
-from src.main.models.metrics import compute_accuracy_bands, compute_error_stats
-from src.main.schemas import ModelArtifacts
+from main.models.metrics import compute_accuracy_bands, compute_error_stats
+from main.schemas import ModelArtifacts
 
 
 def train_random_forest(

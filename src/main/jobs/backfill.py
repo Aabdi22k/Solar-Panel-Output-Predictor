@@ -5,20 +5,20 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from src.main.config import AppDefaults, Location
-from src.main.data_sources.open_meteo import (
+from main.config import AppDefaults, Location
+from main.data_sources.open_meteo import (
     fetch_actual_ghi_today,
     fetch_historical_weather_daily,
 )
-from src.main.features.cleaning import drop_na_rows
-from src.main.features.engineering import engineer_features
-from src.main.models.history import (
+from main.features.cleaning import drop_na_rows
+from main.features.engineering import engineer_features
+from main.models.history import (
     upsert_prediction_file,
     update_actual_ghi_file,
 )
-from src.main.models.predict import predict_ghi
-from src.main.models.train import load_artifacts
-from src.main.paths import ProjectPaths
+from main.models.predict import predict_ghi
+from main.models.train import load_artifacts
+from main.paths import ProjectPaths
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULTS = AppDefaults()

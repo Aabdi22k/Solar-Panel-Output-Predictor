@@ -13,9 +13,9 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.main.data_sources.open_meteo import fetch_forecast_weather_daily
-from src.main.features.cleaning import drop_na_rows
-from src.main.features.engineering import engineer_features
+from main.data_sources.open_meteo import fetch_forecast_weather_daily
+from main.features.cleaning import drop_na_rows
+from main.features.engineering import engineer_features
 
 def build_forecast_features(
     *,

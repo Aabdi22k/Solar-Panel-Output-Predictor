@@ -12,10 +12,10 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.main.data_sources.nrel_nsrdb import fetch_nsrdb_half_hourly
-from src.main.data_sources.open_meteo import fetch_historical_weather_daily
-from src.main.features.cleaning import drop_na_rows
-from src.main.features.engineering import engineer_features
+from main.data_sources.nrel_nsrdb import fetch_nsrdb_half_hourly
+from main.data_sources.open_meteo import fetch_historical_weather_daily
+from main.features.cleaning import drop_na_rows
+from main.features.engineering import engineer_features
 def _aggregate_nsrdb_to_daily(nsrdb_half_hourly: pd.DataFrame) -> pd.DataFrame:
     """Aggregate half-hourly NSRDB records into a daily GHI target.
 
