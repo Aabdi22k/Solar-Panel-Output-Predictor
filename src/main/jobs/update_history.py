@@ -5,10 +5,10 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-from main.config import Location, AppDefaults
-from main.data_sources.open_meteo import fetch_actual_ghi_today
-from main.models.history import update_actual_ghi_file
-from main.paths import ProjectPaths
+from src.main.config import Location, AppDefaults
+from src.main.data_sources.open_meteo import fetch_actual_ghi_today
+from src.main.models.history import update_actual_ghi_file
+from src.main.paths import ProjectPaths
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
