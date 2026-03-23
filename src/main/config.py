@@ -40,7 +40,7 @@ class TrainingConfig:
         random_state: Random seed for reproducibility.
     """
 
-    start_year: int = 1998
+    start_year: int = 2020
     end_year: int = 2023
     interval_minutes: int = 30
     test_size: float = 0.2
@@ -77,7 +77,7 @@ class AppDefaults:
             key="phoenix",
             latitude=33.448376,
             longitude=-112.074036,
-            name="Phoenix, AZ",
+            name="Phoenix, Arizona",
             timezone="America/Phoenix",
         ),
         # Add more later:
