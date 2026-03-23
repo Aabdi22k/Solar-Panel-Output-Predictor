@@ -14,6 +14,7 @@ from main.paths import ProjectPaths
 REPO_ROOT = Path(__file__).resolve().parents[3]
 DEFAULTS = AppDefaults()
 
+
 def _tag_for_location(lat: float, lon: float) -> str:
     return f"{lat}_{lon}".replace(".", "p")
 
@@ -59,7 +60,7 @@ def update_history_for_location(
         timezone=location.timezone,
     )
 
-    updated_history = update_actual_ghi_file(
+    updated_history, updated = update_actual_ghi_file(
         history_file,
         target_date=target_date.isoformat(),
         actual_ghi_kwh_m2=actual_ghi_kwh_m2,
@@ -72,6 +73,7 @@ def update_history_for_location(
         "history_file": str(history_file),
         "actual_ghi_kwh_m2": actual_ghi_kwh_m2,
         "history_count": len(updated_history),
+        "updated": updated,
     }
 
 
@@ -110,6 +112,7 @@ def main() -> None:
             "[update_history]"
             f" location={result['location_key']}"
             f" date={result['target_date']}"
+            f" updated={result['updated']}"
             f" actual_ghi_kwh_m2={result['actual_ghi_kwh_m2']}"
             f" history_file={result['history_file']}"
             f" history_count={result['history_count']}"

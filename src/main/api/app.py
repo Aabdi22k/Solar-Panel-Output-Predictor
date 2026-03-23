@@ -16,7 +16,11 @@ from pydantic import BaseModel
 from main.config import AppDefaults, Location, TrainingConfig
 from main.data_pipeline.build_dataset import build_training_dataset
 from main.data_pipeline.forecast import build_forecast_features
-from main.models.history import load_history_file, calculate_accuracy_bands_percent
+from main.models.history import (
+    load_history_file,
+    calculate_accuracy_bands_percent,
+    upsert_prediction_file,
+)
 from main.models.predict import predict_ghi
 from main.models.train import (
     load_artifacts,
@@ -394,6 +398,16 @@ def get_forecast(
         std_kwh_m2 = float(artifacts.error_std) / 1000.0
 
         local_today = datetime.now(ZoneInfo(location_tz)).date()
+
+        if ghi_pred_kwh_m2:
+            upsert_prediction_file(
+                history_file,
+                target_date=local_today.isoformat(),
+                predicted_ghi_kwh_m2=ghi_pred_kwh_m2[0],
+                model_tag=tag,
+                loaded_from_artifacts=already_trained and not trained_on_request,
+            )
+
         history = load_history_file(history_file)
 
         actual_accuracy_bands = calculate_accuracy_bands_percent(
